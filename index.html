@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMBC Portfolio Dashboard — FY23 v3 (Corrected)</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --n0:#060e1c;--n1:#0a1628;--n2:#0f1f3d;--n3:#162850;--n4:#1e3363;
+  --gold:#c8a44a;--gold2:#e8c46a;--teal:#2a8fa0;--teal2:#3db8cc;
+  --red:#c84040;--grn:#2a9060;--wht:#f0ead8;--mut:#7a90aa;
+  --bdr:rgba(200,164,74,0.15);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--n0);color:var(--wht);min-height:100vh;display:flex;flex-direction:column;}
+#topnav{display:flex;align-items:center;padding:10px 28px;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--n3);background:var(--n0);position:sticky;top:0;z-index:50;}
+#topnav .brand{font-family:'Playfair Display',serif;font-size:14px;color:var(--gold);letter-spacing:3px;margin-right:18px;flex-shrink:0;}
+#topnav .version{font-size:9px;color:var(--teal2);letter-spacing:1px;margin-left:4px;border:1px solid var(--teal);padding:2px 6px;border-radius:2px;}
+.nav-btn{background:transparent;color:var(--mut);border:1px solid var(--n3);padding:4px 11px;font-size:10px;cursor:pointer;letter-spacing:0.5px;border-radius:2px;font-family:'IBM Plex Sans',sans-serif;font-weight:400;transition:all 0.18s;}
+.nav-btn:hover{color:var(--wht);border-color:var(--mut);}
+.nav-btn.active{background:var(--gold);color:var(--n1);border-color:var(--gold);font-weight:600;}
+#main{flex:1;display:flex;flex-direction:column;}
+.page{display:none;padding:32px 40px 40px;animation:fadein 0.25s ease;}
+.page.active{display:block;}
+#p7.active{display:flex;flex-direction:column;}
+@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.sec-sub{font-size:10px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:5px;}
+.sec-title{font-family:'Playfair Display',serif;font-size:26px;color:var(--wht);font-weight:700;line-height:1.1;}
+.sec-rule{width:40px;height:2px;background:var(--gold);margin-top:8px;}
+.sec-head{margin-bottom:22px;}
+.chart-lbl{font-size:10px;letter-spacing:2px;color:var(--mut);text-transform:uppercase;margin-bottom:8px;}
+.card{background:var(--n2);padding:14px 16px;}
+.card-gold{border-left:3px solid var(--gold);}
+.card-teal{border-left:3px solid var(--teal);}
+.card-red{border-left:3px solid var(--red);}
+.card-grn{border-left:3px solid var(--grn);}
+.kpi-mini{flex:1;padding:10px 12px;background:var(--n2);text-align:center;}
+.kpi-mini .kv{font-family:'Playfair Display',serif;font-size:20px;color:var(--gold);font-weight:700;}
+.kpi-mini .kl{font-size:9px;color:var(--wht);margin-top:2px;}
+.kpi-mini .ks{font-size:9px;color:var(--mut);margin-top:1px;}
+.row{display:flex;gap:20px;}
+.col{flex:1;display:flex;flex-direction:column;gap:16px;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+.callout{padding:13px 15px;background:var(--n2);}
+.callout .c-tag{font-size:10px;letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;}
+.callout .c-body{font-size:11px;color:var(--mut);line-height:1.6;}
+.callout .c-body b{color:var(--wht);}
+.hbar-row{margin-bottom:11px;}
+.hbar-meta{display:flex;justify-content:space-between;margin-bottom:4px;}
+.hbar-meta span{font-size:11px;color:var(--mut);}
+.hbar-meta strong{font-size:11px;color:var(--wht);font-weight:600;}
+.hbar-track{height:7px;background:var(--n3);border-radius:3px;overflow:hidden;}
+.hbar-fill{height:100%;border-radius:3px;transition:width 1s cubic-bezier(.4,0,.2,1);}
+.quad-wrap{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:2px;background:var(--n3);}
+.quad{padding:16px 14px;display:flex;flex-direction:column;justify-content:space-between;}
+.quad-tl{background:#0d1e35;}.quad-tr{background:#0d2118;}.quad-bl{background:#201a0a;}.quad-br{background:#1f0d0d;}
+.quad-badge{display:inline-block;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 8px;border-radius:2px;margin-bottom:8px;}
+.qb-blue{background:rgba(42,143,160,0.25);color:var(--teal2);}
+.qb-grn{background:rgba(42,144,96,0.25);color:#4ade80;}
+.qb-gold{background:rgba(200,164,74,0.2);color:var(--gold2);}
+.qb-red{background:rgba(200,64,64,0.2);color:#f87171;}
+.quad-num{font-family:'Playfair Display',serif;font-size:40px;color:var(--wht);line-height:1;}
+.quad-lbl{font-size:10px;color:var(--mut);}
+.quad-hl{font-size:11px;font-weight:600;margin-top:6px;}
+.axis-x-labels{display:flex;gap:2px;padding-left:22px;margin-bottom:4px;}
+.axis-x-labels span{flex:1;font-size:8px;font-weight:600;color:var(--mut);letter-spacing:1px;text-transform:uppercase;text-align:center;}
+.axis-y-wrap{display:flex;gap:6px;}
+.axis-y-labels{display:flex;flex-direction:column;gap:2px;width:20px;}
+.axis-y-labels span{flex:1;font-size:8px;font-weight:600;color:var(--mut);letter-spacing:1px;text-transform:uppercase;writing-mode:vertical-rl;transform:rotate(180deg);text-align:center;}
+.cs-card{background:var(--n2);overflow:hidden;margin-bottom:12px;}
+.cs-accent{height:3px;}
+.cs-inner{padding:12px 14px;}
+.cs-tag{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:3px;}
+.cs-num{font-family:'Playfair Display',serif;font-size:26px;color:var(--wht);line-height:1;margin-bottom:4px;}
+.cs-desc{font-size:11px;color:var(--mut);line-height:1.55;margin-bottom:8px;}
+.cs-pill{font-size:10px;font-weight:600;padding:4px 10px;display:inline-block;}
+.br-tbl{width:100%;border-collapse:collapse;}
+.br-tbl th{background:var(--n3);color:var(--mut);font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:10px 14px;text-align:left;font-weight:500;}
+.br-tbl td{font-size:11px;padding:10px 14px;border-bottom:1px solid var(--n3);color:var(--wht);}
+.br-tbl tr:hover td{background:var(--n3);}
+.at{font-size:9px;font-weight:700;padding:3px 8px;}
+.at-red{background:rgba(200,64,64,0.2);color:#f87171;}
+.at-grn{background:rgba(42,144,96,0.2);color:#4ade80;}
+.at-gold{background:rgba(200,164,74,0.2);color:var(--gold2);}
+.at-teal{background:rgba(61,184,204,0.2);color:var(--teal2);}
+.at-mut{background:var(--n3);color:var(--mut);}
+.strat-card{background:var(--n2);overflow:hidden;}
+.strat-top-bar{height:4px;}
+.strat-body{padding:16px;}
+.strat-head{font-family:'Playfair Display',serif;font-size:14px;color:var(--wht);margin-bottom:8px;}
+.strat-text{font-size:11px;color:var(--mut);line-height:1.65;}
+.strat-text b{color:var(--wht);}
+.pareto-item{padding:11px 14px;background:var(--n2);border-left:3px solid var(--gold);margin-bottom:8px;}
+.pareto-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.pareto-label{font-size:12px;color:var(--wht);}
+.pareto-val{font-family:'Playfair Display',serif;font-size:22px;color:var(--gold);font-weight:700;}
+.pareto-note{font-size:10px;color:var(--mut);margin-bottom:6px;}
+.pareto-track{height:4px;background:var(--n3);border-radius:2px;}
+.pareto-fill{height:100%;background:var(--gold);border-radius:2px;transition:width 1s ease;}
+/* footnote style */
+.fn{font-size:9px;color:var(--mut);font-style:italic;margin-top:6px;padding-top:5px;border-top:1px solid var(--n3);line-height:1.5;}
+.fn-sup{font-size:8px;color:var(--teal2);vertical-align:super;margin-right:2px;}
+.fn-block{background:var(--n1);border:1px solid var(--n3);border-left:2px solid var(--teal);padding:8px 12px;margin-top:10px;}
+.fn-title{font-size:9px;font-weight:600;color:var(--teal2);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;}
+.fn-row{font-size:9px;color:var(--mut);margin-bottom:3px;line-height:1.5;}
+.fn-row b{color:var(--wht);}
+.donut-legend{display:flex;flex-direction:column;gap:5px;margin-top:8px;}
+.dl-item{display:flex;align-items:center;gap:8px;}
+.dl-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+.dl-label{font-size:11px;color:var(--mut);flex:1;}
+.dl-val{font-size:11px;color:var(--wht);font-weight:600;}
+.mono{font-family:'IBM Plex Mono',monospace;}
+#botnav{display:flex;justify-content:center;align-items:center;gap:20px;padding:10px 0 14px;border-top:1px solid var(--n3);background:var(--n0);}
+#botnav button{background:transparent;border:1px solid var(--n3);color:var(--mut);padding:5px 18px;cursor:pointer;font-size:11px;font-family:'IBM Plex Sans',sans-serif;transition:all 0.18s;}
+#botnav button:hover:not(:disabled){color:var(--wht);border-color:var(--mut);}
+#botnav button:disabled{opacity:0.3;cursor:default;}
+#botnav .pg-ind{font-size:11px;color:var(--mut);font-family:'IBM Plex Mono',monospace;}
+</style>
+</head>
+<body>
+
+<div id="topnav">
+  <div class="brand">SMBC <span class="version">v3 — corrected</span></div>
+  <button class="nav-btn active" onclick="goTo(1)">Portfolio Snapshot</button>
+  <button class="nav-btn" onclick="goTo(2)">Profitability &amp; Concentration</button>
+  <button class="nav-btn" onclick="goTo(3)">Wallet Share &amp; Deposit Upside</button>
+  <button class="nav-btn" onclick="goTo(4)">Product Mix &amp; Cross-Sell</button>
+  <button class="nav-btn" onclick="goTo(5)">Risk Assessment</button>
+  <button class="nav-btn" onclick="goTo(6)">Branch Strategy</button>
+  <button class="nav-btn" onclick="goTo(7)">Priorities &amp; Playbook</button>
+</div>
+
+<div id="main">
+
+<!-- ══ PAGE 1 ══ -->
+<div id="p1" class="page active">
+  <div class="sec-head">
+    <div class="sec-sub">SMBC Corporate Banking · FY23 Analysis</div>
+    <div class="sec-title">Portfolio Snapshot</div>
+    <div class="sec-rule"></div>
+  </div>
+
+  <div class="row" style="margin-bottom:18px;gap:10px;">
+    <div class="kpi-mini"><div class="kv">22,671</div><div class="kl">Total Customers</div><div class="ks">Across 7 branches</div></div>
+    <div class="kpi-mini"><div class="kv">$1,741M</div><div class="kl">Total Gross Profit</div><div class="ks">FY23 pool (USD)</div></div>
+    <div class="kpi-mini" style="border-top:2px solid var(--grn);"><div class="kv" style="color:var(--teal2);">52.8%</div><div class="kl">Active Rate</div><div class="ks">11,973 GP &gt; 0</div></div>
+    <!-- CORRECTED: 10,698 → 10,436 (was including 262 unclassified rows) -->
+    <div class="kpi-mini" style="border-top:2px solid var(--red);"><div class="kv" style="color:#f87171;">46.0%</div><div class="kl">Dormant Rate<span class="fn-sup">①</span></div><div class="ks">10,436 zero GP</div></div>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <div class="chart-lbl">Product Penetration — % of Active Customers</div>
+      <div id="pen-bars" style="margin-bottom:10px;"></div>
+      <div class="fn-block">
+        <div class="fn-title">Method — Product Penetration</div>
+        <div class="fn-row"><b>Denominator:</b> 11,973 active customers (Gross profit &gt; 0)</div>
+        <div class="fn-row"><b>Deposits:</b> LD balance &gt; 0 OR TD balance &gt; 0</div>
+        <div class="fn-row"><b>Remittance:</b> Remittance amount &gt; 0</div>
+        <div class="fn-row"><b>FX:</b> FX amount FY23 &gt; 0</div>
+        <div class="fn-row"><b>Loans:</b> Loan balance &gt; 0</div>
+        <div class="fn-row"><b>Trade Finance:</b> Trade Finance profit &gt; 0</div>
+      </div>
+      <div class="callout card-red" style="margin-top:10px;">
+        <div class="c-tag" style="color:#f87171;">⚠ Dormancy Crisis</div>
+        <div class="c-body"><b>46% of the portfolio generates zero gross profit.</b> Of these 10,436 dormant accounts, 2,557 show documented cash balances on their balance sheets — active businesses routing their treasury entirely to competitors.</div>
+      </div>
+      <div class="fn-row" style="margin-top:6px;"><span class="fn-sup">①</span> Dormant count corrected to 10,436 (Gross profit = 0). Prior version showed 10,698, which incorrectly included 262 rows with no Branch assignment. All customer rows are counted; Branch blanks do not affect this metric.</div>
+    </div>
+
+    <div>
+      <div class="chart-lbl">Customer Activity Breakdown — % of All 22,671 Customers</div>
+      <div id="act-bars" style="margin-bottom:10px;"></div>
+      <div class="fn-block">
+        <div class="fn-title">Method — Activity Breakdown</div>
+        <div class="fn-row"><b>Denominator:</b> 22,671 ALL customers (including dormant)</div>
+        <div class="fn-row"><b>Key difference from left chart:</b> this chart asks "of the entire book, what % have any activity?" — the left chart asks "of paying customers, what % use each product?"</div>
+        <div class="fn-row"><b>Loan exposure:</b> corrected to 9.2% (was 9.1%; rounding from 9.17%)</div>
+      </div>
+      <div class="callout card-gold" style="margin-top:10px;">
+        <div class="c-tag" style="color:var(--gold2);">Portfolio Lens</div>
+        <div class="c-body">Deposits anchor 85% of active relationships, but <b>remittance at 63% and FX at 41%</b> reveal an internationally active client base that is substantially under-monetised. Only 13% use Trade Finance.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAGE 2 ══ -->
+<div id="p2" class="page">
+  <div class="sec-head">
+    <div class="sec-sub">Profitability Analysis</div>
+    <div class="sec-title">Revenue Concentration &amp; Income Mix</div>
+    <div class="sec-rule"></div>
+  </div>
+
+  <div class="row">
+    <div class="col" style="flex:1.1;">
+      <div>
+        <div class="chart-lbl">Revenue Concentration — Pareto<span class="fn-sup">②</span></div>
+        <div id="pareto-items"></div>
+        <div class="fn-block" style="margin-top:4px;">
+          <div class="fn-title">Method — Pareto</div>
+          <div class="fn-row"><b>Denominator:</b> Total GP = $1,740,951,764 (sum of all Gross profit)</div>
+          <div class="fn-row"><b>Population:</b> 11,973 active customers, sorted by Gross profit descending</div>
+          <div class="fn-row"><span class="fn-sup">②</span> All three concentration figures corrected upward vs prior version. Prior used a slightly lower GP denominator, understating concentration by 0.6–1.8pp.</div>
+        </div>
+      </div>
+      <div class="callout card-red">
+        <div class="c-tag" style="color:#f87171;">⚠ Concentration Risk</div>
+        <div class="c-body"><b>The top 10% of active customers generate 77.8% of gross profit.</b> 1,197 customers underwrite $1,355M of the $1,741M pool. The loss of five key Branch S clients could exceed the entire annual GP of branches M, T, V, N, and Y combined.</div>
+      </div>
+    </div>
+
+    <div class="col" style="flex:1;">
+      <div>
+        <div class="chart-lbl">Gross Profit Composition by Product</div>
+        <div style="display:flex;gap:18px;align-items:flex-start;">
+          <div style="position:relative;height:180px;width:180px;flex-shrink:0;">
+            <canvas id="mixChart" style="width:180px;height:180px;"></canvas>
+          </div>
+          <div class="donut-legend" id="mixLegend" style="margin-top:12px;flex:1;"></div>
+        </div>
+        <div class="fn-block" style="margin-top:6px;">
+          <div class="fn-title">Method — GP Mix</div>
+          <div class="fn-row">Each slice = SUM of product profit column / Total GP. GP Mix = LD profit + TD profit + FX profit + Loan profit + TF profit = $1,741M exactly.</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="chart-lbl">GP by Branch ($M)<span class="fn-sup">③</span></div>
+        <div style="height:140px;"><canvas id="branchChart"></canvas></div>
+        <div class="fn-row" style="margin-top:5px;"><span class="fn-sup">③</span> Branch V corrected: $100.3M (was $115M). Branch N corrected: $46.3M (was $58M). Prior version inadvertently allocated $26.4M GP from 109 unassigned-Branch rows across V and N. Those rows are now excluded from branch charts.</div>
+      </div>
+
+      <div class="callout card-gold">
+        <div class="c-tag" style="color:var(--gold2);">Income Quality Risk</div>
+        <div class="c-body"><b>Loan income = 59.1% of GP</b>, yet only 9.2% of customers carry loan exposure. Fee income — FX (9.3%), Trade Finance (3.1%) — is chronically underdeveloped.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAGE 3 ══ -->
+<div id="p3" class="page">
+  <div class="sec-head">
+    <div class="sec-sub">Wallet Share Analysis</div>
+    <div class="sec-title">Competitive Position &amp; Deposit Upside</div>
+    <div class="sec-rule"></div>
+  </div>
+
+  <div class="row">
+    <div class="col" style="flex:1.1;">
+      <div>
+        <div class="chart-lbl">Wallet Share Matrix — Lending vs. Deposit WS<span class="fn-sup">④</span></div>
+        <div class="axis-x-labels"><span>Low Deposit WS</span><span>High Deposit WS</span></div>
+        <div class="axis-y-wrap">
+          <div class="axis-y-labels"><span>High Lend</span><span>Low Lend</span></div>
+          <div class="quad-wrap" style="flex:1;">
+            <div class="quad quad-tl">
+              <span class="quad-badge qb-blue">⚡ Deposit Upside</span>
+              <div><div class="quad-num">268</div><div class="quad-lbl">customers</div><div class="quad-hl" style="color:var(--teal2);">$1.65B deposit opportunity</div></div>
+            </div>
+            <!-- CORRECTED: Anchor 73→152, using consistent Lend>50% & Dep>=50% threshold -->
+            <div class="quad quad-tr">
+              <span class="quad-badge qb-grn">🔒 Anchor</span>
+              <div><div class="quad-num">152</div><div class="quad-lbl">customers</div><div class="quad-hl" style="color:#4ade80;">Fully captured — defend</div></div>
+            </div>
+            <!-- CORRECTED: Growth Target 3,895→3,902 -->
+            <div class="quad quad-bl">
+              <span class="quad-badge qb-gold">🎯 Growth Target</span>
+              <div><div class="quad-num">3,902</div><div class="quad-lbl">customers</div><div class="quad-hl" style="color:var(--gold2);">Largest untapped segment</div></div>
+            </div>
+            <!-- CORRECTED: Deposit-Led 845→981 (flows from Anchor threshold correction) -->
+            <div class="quad quad-br">
+              <span class="quad-badge qb-red">🏦 Deposit-Led</span>
+              <div><div class="quad-num">981</div><div class="quad-lbl">customers</div><div class="quad-hl" style="color:#f87171;">Lending cross-sell needed</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="fn-block" style="margin-top:8px;">
+          <div class="fn-title">Method — Wallet Share Matrix</div>
+          <div class="fn-row"><b>Working set:</b> 5,384 customers with BOTH Deposit WS and Lending WS values (non-blank). 17,287 rows excluded — no wallet share data.</div>
+          <div class="fn-row"><b>Deposit Upside:</b> Lending WS &gt; 50% AND Deposit WS &lt; 20%</div>
+          <div class="fn-row"><b>Anchor:</b> Lending WS &gt; 50% AND Deposit WS ≥ 50%</div>
+          <div class="fn-row"><b>Growth Target:</b> Lending WS ≤ 50% AND Deposit WS &lt; 50%</div>
+          <div class="fn-row"><b>Deposit-Led:</b> Lending WS ≤ 50% AND Deposit WS ≥ 50%</div>
+          <div class="fn-row" style="margin-top:4px;"><span class="fn-sup">④</span> Anchor corrected: 152 (was 73). Prior version used an undocumented stricter threshold. Deposit-Led corrected to 981 (was 845) as a direct consequence.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col" style="flex:1;">
+      <div class="chart-lbl">Key Wallet Share Findings</div>
+
+      <!-- CORRECTED: $970M → $1.65B (30% capture of $5.5B cash held by 268 customers) -->
+      <div class="callout card-gold" style="margin-bottom:10px;">
+        <div class="c-tag" style="color:var(--gold2);">💰 $1.65B Deposit Opportunity — Highest-ROI Action<span class="fn-sup">⑤</span></div>
+        <div class="c-body"><b>268 customers</b> where the bank already holds &gt;50% of lending wallet share but &lt;20% of deposit share. These companies trust the bank with their debt but route their treasury elsewhere. Total cash on balance sheet for this group = $5.5B. A TD or sweep deposit proposition requires no new credit risk and no new customer acquisition.</div>
+      </div>
+
+      <div class="callout card-teal" style="margin-bottom:10px;">
+        <div class="c-tag" style="color:var(--teal2);">Lending WS Materially Stronger Than Deposit WS<span class="fn-sup">⑥</span></div>
+        <div class="c-body">The raw Wallet Share columns contain extreme outliers (&gt;100%) due to near-zero denominators. Median values (capped 0–100%) show Deposit WS ≈ 2% and Lending WS ≈ 0% — reflecting that most customers have partial data only. The qualitative gap between lending and deposit capture is the actionable insight, not the average figures.</div>
+      </div>
+
+      <div class="callout card-red">
+        <div class="c-tag" style="color:#f87171;">3,902 Growth Targets — But Insufficient Data to Act</div>
+        <div class="c-body">The largest quadrant — low lending and low deposit share — also has the most missing balance sheet data. Coverage teams must complete financial profiling on these accounts before this can become a growth priority.</div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:4px;">
+        <div class="kpi-mini"><div class="kv mono" style="font-size:16px;">268</div><div class="kl">Deposit Upside Accts</div></div>
+        <div class="kpi-mini"><div class="kv mono" style="font-size:16px;color:#f87171;">$1.65B</div><div class="kl">30% Capture Est.</div></div>
+        <div class="kpi-mini"><div class="kv mono" style="font-size:16px;color:var(--teal2);">0 new</div><div class="kl">Credit risk required</div></div>
+      </div>
+
+      <div class="fn-block">
+        <div class="fn-title">Footnotes</div>
+        <div class="fn-row"><span class="fn-sup">⑤</span> Deposit opportunity = SUM(Cash balance on BS) for 268 Deposit Upside customers × 30% capture rate = $5.50B × 30% = $1.65B. This is an estimate assuming 30% of cash holdings could be captured. Conservative scenarios at lower capture rates: 20% = $1.10B, 10% = $550M.</div>
+        <div class="fn-row" style="margin-top:4px;"><span class="fn-sup">⑥</span> Avg Deposit WS (43%) and Avg Lending WS (68%) shown in prior version cannot be reproduced from raw data — the WS columns contain extreme values above 100%. These KPI figures have been removed. Median capped values are shown instead as directional indicators only.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAGE 4 ══ -->
+<div id="p4" class="page">
+  <div class="sec-head">
+    <div class="sec-sub">Product Mix Analysis</div>
+    <div class="sec-title">Cross-Sell Gaps &amp; Revenue Diversification</div>
+    <div class="sec-rule"></div>
+  </div>
+
+  <div class="row">
+    <div class="col" style="flex:1;">
+      <div>
+        <div class="chart-lbl">Product Breadth Distribution — Active Customers</div>
+        <div style="height:185px;"><canvas id="prodDistChart"></canvas></div>
+        <div class="fn-block" style="margin-top:6px;">
+          <div class="fn-title">Method — Product Count</div>
+          <div class="fn-row"><b>Each customer gets +1 for each TRUE condition:</b></div>
+          <div class="fn-row">Deposit: LD balance &gt;0 OR TD balance &gt;0 | Remittance: Remittance amount &gt;0</div>
+          <div class="fn-row">FX: FX amount FY23 &gt;0 | Loan: Loan balance &gt;0 | TF: TF profit &gt;0</div>
+          <div class="fn-row"><b>Population:</b> 11,973 active customers (Gross profit &gt; 0)</div>
+        </div>
+      </div>
+      <div>
+        <div class="chart-lbl">Average GP by Product Count ($K)</div>
+        <div style="height:155px;"><canvas id="avgGpChart"></canvas></div>
+      </div>
+      <div class="callout card-teal" style="margin-top:4px;">
+        <div class="c-tag" style="color:var(--teal2);">The Multi-Product Premium</div>
+        <div class="c-body">5-product customers average <b>$253K GP</b> vs $81K for 2-product accounts — a 3× gap. Growing existing relationships is more capital-efficient than acquiring new customers.</div>
+      </div>
+    </div>
+
+    <div class="col" style="flex:1.05;">
+      <div class="chart-lbl">Priority Cross-Sell Opportunities</div>
+
+      <!-- CORRECTED: 852 → 2,932 (all active remittance customers with zero FX) -->
+      <div class="cs-card">
+        <div class="cs-accent" style="background:var(--gold);"></div>
+        <div class="cs-inner">
+          <div class="cs-tag" style="color:var(--gold);">Remittance → FX Conversion<span class="fn-sup">⑦</span></div>
+          <div class="cs-num">2,932 customers</div>
+          <div class="cs-desc">Active customers who send remittances but generate <b>zero FX revenue</b> (FX amount FY23 = 0 AND FX profit = 0). They are converting currency somewhere — just not here. A targeted FX rate offer to this full segment could start converting within 30 days.</div>
+          <span class="cs-pill" style="background:rgba(200,164,74,0.2);color:var(--gold2);">30% conversion at median FX profit ($3,768) → +$3.3M incremental GP</span>
+        </div>
+      </div>
+
+      <!-- CORRECTED: 1,891 remains — but definition clarified as exactly-1-product deposit customers -->
+      <div class="cs-card">
+        <div class="cs-accent" style="background:var(--teal);"></div>
+        <div class="cs-inner">
+          <div class="cs-tag" style="color:var(--teal2);">Deposit-Only → Lending<span class="fn-sup">⑧</span></div>
+          <div class="cs-num">1,891 customers</div>
+          <div class="cs-desc">Active customers using deposits as their <b>sole product</b> (product count = 1, deposit product only). No loan, no FX, no remittance, no TF. The deposit relationship is proof of trust — the barrier to a credit conversation is lower than a cold approach.</div>
+          <span class="cs-pill" style="background:rgba(42,143,160,0.2);color:var(--teal2);">Broader set: 8,924 active deposit customers with no loan at all</span>
+        </div>
+      </div>
+
+      <!-- CORRECTED: 702 remains — but definition clarified as exactly-1-product loan customers -->
+      <div class="cs-card">
+        <div class="cs-accent" style="background:var(--n4);"></div>
+        <div class="cs-inner">
+          <div class="cs-tag" style="color:var(--mut);">Loan-Only → Trade Finance<span class="fn-sup">⑨</span></div>
+          <div class="cs-num">702 customers</div>
+          <div class="cs-desc">Active customers using a loan as their <b>sole product</b> (product count = 1, loan only). For any company with cross-border supply chains, <b>Trade Finance is not optional — it is operational infrastructure.</b> TF penetration of 12.6% across the active base is the most underleveraged product in the portfolio.</div>
+          <span class="cs-pill" style="background:rgba(30,51,99,0.6);color:var(--mut);">Broader set: 1,698 active loan customers with no TF | Avg TF profit = $35K</span>
+        </div>
+      </div>
+
+      <div class="fn-block">
+        <div class="fn-title">Footnotes</div>
+        <div class="fn-row"><span class="fn-sup">⑦</span> Remittance→FX corrected: 2,932 (was 852). Full set = all active customers with Remittance amount &gt;0 AND FX amount FY23 = 0 AND FX profit = 0. The prior figure of 852 used an undocumented threshold (approximately top-quartile remittance volume) — that sub-segment filter has been removed for reproducibility.</div>
+        <div class="fn-row" style="margin-top:4px;"><span class="fn-sup">⑧</span> Deposit-Only definition: exactly 1 product (product_count = 1) and that product is deposits. Broader filter (any deposit customer with no loan) gives 8,924 — shown as reference.</div>
+        <div class="fn-row" style="margin-top:4px;"><span class="fn-sup">⑨</span> Loan-Only definition: exactly 1 product (product_count = 1) and that product is a loan. Broader filter (any active loan customer with no TF) gives 1,698 — shown as reference.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAGE 5 ══ -->
+<div id="p5" class="page">
+  <div class="sec-head">
+    <div class="sec-sub">Risk Assessment</div>
+    <div class="sec-title">Credit Quality · ROE Distribution · Revenue Risk</div>
+    <div class="sec-rule"></div>
+  </div>
+
+  <div class="row">
+    <div class="col" style="flex:1.1;">
+      <div>
+        <div class="chart-lbl">ROE Distribution — Clean Loan Book (1,893 customers)<span class="fn-sup">⑩</span></div>
+        <div style="height:200px;"><canvas id="roeDistChart"></canvas></div>
+        <div class="fn-block" style="margin-top:5px;">
+          <div class="fn-title">Clean Loan Book Filter</div>
+          <div class="fn-row"><b>Step 1:</b> All customers with Loan balance &gt; 0 → 2,087</div>
+          <div class="fn-row"><b>Step 2:</b> Keep Loan balance ≥ $50,000 (removes near-zero denominator distortion)</div>
+          <div class="fn-row"><b>Step 3:</b> Keep ROE between −200% and +200% (removes extreme outliers)</div>
+          <div class="fn-row"><b>Result:</b> 1,893 qualifying loan customers for ROE analysis</div>
+        </div>
+      </div>
+      <div>
+        <div class="chart-lbl">FX Volume — FY22 vs FY23 ($B)</div>
+        <div style="height:130px;"><canvas id="fxTrendChart"></canvas></div>
+        <!-- CORRECTED: 2,951 → 889 stopped entirely / 3,113 reduced any amount -->
+        <div class="fn-row" style="margin-top:5px;"><span class="fn-sup">⑪</span> FX volume contracted 5.1% YoY. <b>889 customers stopped FX entirely</b> (FY22 &gt;0, FY23 = 0). A further 2,224 customers reduced FX volume without stopping. Total customers with any FX reduction: 3,113. Prior version stated "2,951 reduced activity" — corrected figure is 889 who exited entirely.</div>
+      </div>
+    </div>
+
+    <div class="col" style="flex:1;">
+      <div class="chart-lbl">Credit Book — Loan Quality<span class="fn-sup">⑫</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;">
+        <div class="card card-teal" style="display:flex;justify-content:space-between;padding:10px 14px;">
+          <span style="font-size:11px;color:var(--mut);">Loan customers (all)</span>
+          <span style="font-size:11px;color:var(--wht);font-weight:600;">2,087</span>
+        </div>
+        <div class="card card-teal" style="display:flex;justify-content:space-between;padding:10px 14px;">
+          <span style="font-size:11px;color:var(--mut);">Loan customers (balance ≥ $50K)</span>
+          <span style="font-size:11px;color:var(--wht);font-weight:600;">1,893</span>
+        </div>
+        <!-- CORRECTED: 2,078 → 2,059 positive; 9 → 28 negative; -$105.8K → -$4.19M -->
+        <div class="card card-grn" style="display:flex;justify-content:space-between;padding:10px 14px;">
+          <span style="font-size:11px;color:var(--mut);">Net P&amp;L positive<span class="fn-sup">⑫</span></span>
+          <span style="font-size:11px;color:#4ade80;font-weight:600;">2,059 &nbsp;(98.7%)</span>
+        </div>
+        <div class="card card-red" style="display:flex;justify-content:space-between;padding:10px 14px;">
+          <span style="font-size:11px;color:var(--mut);">Net P&amp;L negative</span>
+          <span style="font-size:11px;color:#f87171;font-weight:600;">28 &nbsp;(1.3%)</span>
+        </div>
+        <div class="card card-red" style="display:flex;justify-content:space-between;padding:10px 14px;">
+          <span style="font-size:11px;color:var(--mut);">Total net loss (28 customers)</span>
+          <span style="font-size:11px;color:#f87171;font-weight:600;">−$4.19M</span>
+        </div>
+        <div class="card card-gold" style="display:flex;justify-content:space-between;padding:10px 14px;">
+          <span style="font-size:11px;color:var(--mut);">Median ROE (clean loan book)</span>
+          <span style="font-size:11px;color:var(--gold2);font-weight:600;">4.2%</span>
+        </div>
+        <div class="card card-teal" style="display:flex;justify-content:space-between;padding:10px 14px;">
+          <span style="font-size:11px;color:var(--mut);">Mean ROE (clean loan book)</span>
+          <span style="font-size:11px;color:var(--teal2);font-weight:600;">13.5%</span>
+        </div>
+      </div>
+
+      <div class="fn-block">
+        <div class="fn-title">Footnote ⑫ — Net P&amp;L Correction</div>
+        <div class="fn-row">Net P&amp;L = Gross profit − Expenses − Credit Cost.</div>
+      </div>
+
+      <div class="callout card-gold" style="margin-top:8px;">
+        <div class="c-tag" style="color:var(--gold2);">The Real Risk Is Concentration, Not Credit</div>
+        <div class="c-body">Net loss of $4.19M against a $1.74B GP pool is still small (0.24%). <b>Credit quality is not the primary threat.</b> Revenue concentration remains the dominant risk — 77.8% of GP from the top 10% of customers means one large client departure matters far more than any individual loan default.</div>
+      </div>
+
+      <div class="callout card-red" style="margin-top:8px;">
+        <div class="c-tag" style="color:#f87171;">⚠ Sub-Cost-of-Capital Lending — 54.8% of Clean Loan Book</div>
+        <div class="c-body"><b>1,037 of 1,893 qualifying loan customers sit below 5% ROE</b> — almost certainly below SMBC's cost of equity. Median ROE of 4.2% confirms that more than half the loan book is sub-threshold. Repricing review is a capital efficiency imperative.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAGE 6 ══ -->
+<div id="p6" class="page">
+  <div class="sec-head">
+    <div class="sec-sub">Branch Strategy</div>
+    <div class="sec-title">Diversification Imperative &amp; Growth Roadmap</div>
+    <div class="sec-rule"></div>
+  </div>
+
+  <div style="overflow:auto;margin-bottom:6px;">
+    <table class="br-tbl">
+      <thead>
+        <tr><th>Branch</th><th>Total GP<span class="fn-sup">③</span></th><th>GP Share</th><th>Active Cust.</th><th>Total Cust.</th><th>Dormancy</th><th>Avg GP</th><th>Mean ROE†</th><th>Avg Products</th><th>Assessment</th></tr>
+      </thead>
+      <tbody id="branchTbody"></tbody>
+    </table>
+  </div>
+  <div class="fn-row" style="margin-bottom:14px;">† Mean ROE on customers with Loan balance ≥ $50K and ROE between −200% and +200% (active customers only). &nbsp;|&nbsp; <span class="fn-sup">③</span> Branch V corrected to $100.3M; Branch N corrected to $46.3M. Prior version included $26.4M from 109 rows with no Branch assignment. Total across all 7 branches = $1,603M; remaining $138M is from the unassigned rows.</div>
+
+  <div class="two-col" style="margin-bottom:20px;">
+    <div>
+      <div class="chart-lbl">GP by Branch ($M)</div>
+      <div style="height:185px;"><canvas id="branchBarDetail"></canvas></div>
+    </div>
+    <div>
+      <div class="chart-lbl">Mean ROE by Branch (%, clean loan book)†</div>
+      <div style="height:185px;"><canvas id="branchRoeChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="three-col">
+    <div class="strat-card">
+      <div class="strat-top-bar" style="background:var(--red);"></div>
+      <div class="strat-body">
+        <div class="strat-head">Defend Branch S — Now</div>
+        <div class="strat-text"><b>$1,066M from one branch is a single point of failure.</b> If the top 50 Branch S clients reduced activity by 20%, the bank would lose more GP than all of branches N, Y, and V combined. Lock in long-term deposit agreements, increase product depth, and make switching costly before a competitor makes it easy.</div>
+      </div>
+    </div>
+    <div class="strat-card">
+      <div class="strat-top-bar" style="background:var(--grn);"></div>
+      <div class="strat-body">
+        <div class="strat-head">Scale Branch B — Best Unit Economics</div>
+        <div class="strat-text">Branch B has the <b>deepest relationship profile</b> (2.6 avg products) and highest mean ROE at 16.0% — the model for what good looks like. Growing B customer count by 20% would add ~$52M in GP and meaningfully reduce S dependency.</div>
+      </div>
+    </div>
+    <div class="strat-card">
+      <div class="strat-top-bar" style="background:var(--teal2);"></div>
+      <div class="strat-body">
+        <div class="strat-head">Branch N — The Dormancy Opportunity</div>
+        <div class="strat-text"><b>88.3% dormancy on 6,413 total customers</b> vs 40.6% for Branch S. Only 748 are active. If Branch N's active rate were raised to the portfolio average (47.2%), approximately 2,276 additional customers would be activated. At Branch N's average GP of $77K, that represents a <b>~$175M upside</b> requiring zero new acquisition.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAGE 7 ══ -->
+<div id="p7" class="page" style="display:none;flex-direction:column;min-height:calc(100vh - 90px);">
+  <div class="sec-head" style="margin-bottom:14px;flex-shrink:0;">
+    <div class="sec-sub">Account Planning Priorities</div>
+    <div class="sec-title">Segmentation Framework &amp; Action Playbook</div>
+    <div class="sec-rule"></div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1.65fr;gap:16px;flex:1;min-height:0;margin-bottom:10px;">
+    <div style="display:flex;flex-direction:column;min-height:0;">
+      <div class="chart-lbl">Profit × ROE Segmentation<span class="fn-sup">⑬</span></div>
+      <div style="display:flex;gap:3px;padding-left:22px;margin-bottom:3px;flex-shrink:0;">
+        <div style="flex:1;text-align:center;font-size:8px;font-weight:700;color:var(--mut);letter-spacing:1px;text-transform:uppercase;">Low ROE</div>
+        <div style="flex:1;text-align:center;font-size:8px;font-weight:700;color:var(--mut);letter-spacing:1px;text-transform:uppercase;">High ROE</div>
+      </div>
+      <div style="display:flex;gap:3px;flex:1;min-height:0;">
+        <div style="display:flex;flex-direction:column;gap:3px;width:20px;flex-shrink:0;">
+          <div style="flex:1;display:flex;align-items:center;justify-content:center;"><span style="font-size:7.5px;font-weight:700;color:var(--mut);letter-spacing:1px;text-transform:uppercase;writing-mode:vertical-rl;transform:rotate(180deg);">High Profit</span></div>
+          <div style="flex:1;display:flex;align-items:center;justify-content:center;"><span style="font-size:7.5px;font-weight:700;color:var(--mut);letter-spacing:1px;text-transform:uppercase;writing-mode:vertical-rl;transform:rotate(180deg);">Low Profit</span></div>
+        </div>
+        <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:3px;background:var(--n3);">
+          <!-- CORRECTED: 528→478, $428M→$390M -->
+          <div style="background:#0d1a30;padding:16px 14px;display:flex;flex-direction:column;justify-content:space-between;">
+            <div><span class="quad-badge qb-gold" style="margin-bottom:8px;display:inline-block;">◈ Volume Players</span><div style="font-size:9px;color:var(--mut);margin-bottom:12px;">High Profit · Low ROE</div></div>
+            <div style="display:flex;gap:8px;">
+              <div style="background:var(--n3);padding:8px 6px;flex:1;text-align:center;"><div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--gold);">478</div><div style="font-size:8.5px;color:var(--mut);">customers</div></div>
+              <div style="background:var(--n3);padding:8px 6px;flex:1;text-align:center;"><div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--gold);">$390M</div><div style="font-size:8.5px;color:var(--mut);">total GP</div></div>
+            </div>
+            <div style="font-size:10px;font-weight:600;color:var(--gold2);margin-top:10px;">→ Reprice &amp; optimise capital</div>
+          </div>
+          <!-- CORRECTED: 502→465, $520M→$495M -->
+          <div style="background:#0d2010;padding:16px 14px;display:flex;flex-direction:column;justify-content:space-between;">
+            <div><span class="quad-badge qb-grn" style="margin-bottom:8px;display:inline-block;">★ Stars</span><div style="font-size:9px;color:var(--mut);margin-bottom:12px;">High Profit · High ROE</div></div>
+            <div style="display:flex;gap:8px;">
+              <div style="background:var(--n3);padding:8px 6px;flex:1;text-align:center;"><div style="font-family:'Playfair Display',serif;font-size:22px;color:#4ade80;">465</div><div style="font-size:8.5px;color:var(--mut);">customers</div></div>
+              <div style="background:var(--n3);padding:8px 6px;flex:1;text-align:center;"><div style="font-family:'Playfair Display',serif;font-size:22px;color:#4ade80;">$495M</div><div style="font-size:8.5px;color:var(--mut);">total GP</div></div>
+            </div>
+            <div style="font-size:10px;font-weight:600;color:#4ade80;margin-top:10px;">→ Protect &amp; deepen</div>
+          </div>
+          <!-- CORRECTED: 501→464, $24M→$23M -->
+          <div style="background:#1a100a;padding:16px 14px;display:flex;flex-direction:column;justify-content:space-between;">
+            <div><span class="quad-badge qb-red" style="margin-bottom:8px;display:inline-block;">○ Underperformers</span><div style="font-size:9px;color:var(--mut);margin-bottom:12px;">Low Profit · Low ROE</div></div>
+            <div style="display:flex;gap:8px;">
+              <div style="background:var(--n3);padding:8px 6px;flex:1;text-align:center;"><div style="font-family:'Playfair Display',serif;font-size:22px;color:#f87171;">464</div><div style="font-size:8.5px;color:var(--mut);">customers</div></div>
+              <div style="background:var(--n3);padding:8px 6px;flex:1;text-align:center;"><div style="font-family:'Playfair Display',serif;font-size:22px;color:#f87171;">$23M</div><div style="font-size:8.5px;color:var(--mut);">total GP</div></div>
+            </div>
+            <div style="font-size:10px;font-weight:600;color:#f87171;margin-top:10px;">→ Exit or restructure</div>
+          </div>
+          <!-- CORRECTED: 528→478, $28M→$27M -->
+          <div style="background:#0a1520;padding:16px 14px;display:flex;flex-direction:column;justify-content:space-between;">
+            <div><span class="quad-badge qb-blue" style="margin-bottom:8px;display:inline-block;">◇ Efficient Smalls</span><div style="font-size:9px;color:var(--mut);margin-bottom:12px;">Low Profit · High ROE</div></div>
+            <div style="display:flex;gap:8px;">
+              <div style="background:var(--n3);padding:8px 6px;flex:1;text-align:center;"><div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--teal2);">478</div><div style="font-size:8.5px;color:var(--mut);">customers</div></div>
+              <div style="background:var(--n3);padding:8px 6px;flex:1;text-align:center;"><div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--teal2);">$27M</div><div style="font-size:8.5px;color:var(--mut);">total GP</div></div>
+            </div>
+            <div style="font-size:10px;font-weight:600;color:var(--teal2);margin-top:10px;">→ Cross-sell to scale</div>
+          </div>
+        </div>
+      </div>
+      <div class="fn-block" style="margin-top:6px;flex-shrink:0;">
+        <div class="fn-title">Footnote ⑬ — Segmentation Method</div>
+        <div class="fn-row"><b>Population:</b> Active customers with Loan balance ≥ $50K AND ROE between −200% and +200% = 1,885 customers.</div>
+        <div class="fn-row"><b>GP threshold:</b> Median GP = $161,903 | <b>ROE threshold:</b> Median ROE = 4.2%</div>
+        <div class="fn-row">Counts corrected down ~37 per quadrant vs prior version (prior used a looser filter).</div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;min-height:0;">
+      <div class="chart-lbl">Action Roadmap by Time Horizon</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;flex:1;min-height:0;">
+        <div style="background:var(--n2);overflow:hidden;display:flex;flex-direction:column;">
+          <div style="background:var(--red);padding:8px 14px;flex-shrink:0;">
+            <div style="font-size:9px;font-weight:700;color:white;letter-spacing:1.5px;text-transform:uppercase;">0 – 3 Months</div>
+            <div style="font-size:9px;color:rgba(255,255,255,0.65);margin-top:2px;">Immediate</div>
+          </div>
+          <div style="padding:12px 14px;display:flex;flex-direction:column;gap:10px;flex:1;">
+            <div style="flex:1;font-size:11px;color:var(--mut);line-height:1.6;padding-left:10px;border-left:2px solid var(--gold);"><b style="color:var(--wht);">Reprice Volume Players.</b> 478 accounts at sub-5% ROE. Set a 90-day repricing gate: improve or exit.</div>
+            <div style="flex:1;font-size:11px;color:var(--mut);line-height:1.6;padding-left:10px;border-left:2px solid var(--teal);"><b style="color:var(--wht);">Name an RM for every Star.</b> 465 accounts, no exceptions. One defection costs more than acquiring 50 new accounts.</div>
+            <div style="flex:1;font-size:11px;color:var(--mut);line-height:1.6;padding-left:10px;border-left:2px solid var(--teal2);"><b style="color:var(--wht);">FX offer to 2,932 remittance accounts.</b> A targeted pricing conversation. 30% conversion = +$3.3M GP.</div>
+          </div>
+        </div>
+        <div style="background:var(--n2);overflow:hidden;display:flex;flex-direction:column;">
+          <div style="background:var(--teal);padding:8px 14px;flex-shrink:0;">
+            <div style="font-size:9px;font-weight:700;color:white;letter-spacing:1.5px;text-transform:uppercase;">3 – 9 Months</div>
+            <div style="font-size:9px;color:rgba(255,255,255,0.65);margin-top:2px;">Near-term</div>
+          </div>
+          <div style="padding:12px 14px;display:flex;flex-direction:column;gap:10px;flex:1;">
+            <div style="flex:1;font-size:11px;color:var(--mut);line-height:1.6;padding-left:10px;border-left:2px solid var(--gold);"><b style="color:var(--wht);">Deposit campaign — 268 accounts.</b> $1.65B addressable pool. TD and sweep propositions to lending-captured clients banking deposits elsewhere.</div>
+            <div style="flex:1;font-size:11px;color:var(--mut);line-height:1.6;padding-left:10px;border-left:2px solid var(--teal2);"><b style="color:var(--wht);">TF cross-sell to 702 loan-only accounts.</b> Credit relationship is the opening. Broader pipeline of 1,698 loan customers with no TF.</div>
+            <div style="flex:1;font-size:11px;color:var(--mut);line-height:1.6;padding-left:10px;border-left:2px solid var(--teal);"><b style="color:var(--wht);">Scale Branch B model.</b> 16.0% mean ROE and 2.6 avg products — the best unit economics in the portfolio.</div>
+          </div>
+        </div>
+        <div style="background:var(--n2);overflow:hidden;display:flex;flex-direction:column;">
+          <div style="background:var(--gold);padding:8px 14px;flex-shrink:0;">
+            <div style="font-size:9px;font-weight:700;color:var(--n1);letter-spacing:1.5px;text-transform:uppercase;">9 – 18 Months</div>
+            <div style="font-size:9px;color:rgba(0,0,0,0.45);margin-top:2px;">Strategic</div>
+          </div>
+          <div style="padding:12px 14px;display:flex;flex-direction:column;gap:10px;flex:1;">
+            <div style="flex:1;font-size:11px;color:var(--mut);line-height:1.6;padding-left:10px;border-left:2px solid var(--teal2);"><b style="color:var(--wht);">Activate Branch N dormant base.</b> 88.3% dormancy on 6,413 customers = ~$175M in unrealised GP. No new acquisition cost required.</div>
+            <div style="flex:1;font-size:11px;color:var(--mut);line-height:1.6;padding-left:10px;border-left:2px solid var(--red);"><b style="color:var(--wht);">Execute Underperformer exits.</b> 464 accounts below breakeven ROE at month 9 get wound down. Free capital for Branch N and B deployment.</div>
+            <div style="flex:1;font-size:11px;color:var(--mut);line-height:1.6;padding-left:10px;border-left:2px solid var(--gold);"><b style="color:var(--wht);">Branch S below 60% GP share.</b> Achievable through B, T, and N growth over 18 months.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:var(--n2);border-top:2px solid var(--gold);padding:14px 20px;display:flex;align-items:center;gap:18px;flex-shrink:0;">
+    <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold);white-space:nowrap;flex-shrink:0;">If one action in 30 days</div>
+    <div style="width:1px;height:28px;background:var(--n3);flex-shrink:0;"></div>
+    <div style="font-size:12px;color:var(--wht);line-height:1.6;">Call the <b style="color:var(--gold);">465 Stars</b>. Confirm a named RM owns every account. The entire risk of this portfolio — concentration, ROE, FX decline — flows from losing one of these relationships. Everything else is a growth problem. <b>This is a survival problem.</b></div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<div id="botnav">
+  <button id="prevBtn" onclick="prev()" disabled>← Prev</button>
+  <span class="pg-ind" id="pgInd">1 / 7</span>
+  <button id="nextBtn" onclick="next()">Next →</button>
+</div>
+
+<script>
+const C={n0:'#060e1c',n1:'#0a1628',n2:'#0f1f3d',n3:'#162850',n4:'#1e3363',gold:'#c8a44a',gold2:'#e8c46a',teal:'#2a8fa0',teal2:'#3db8cc',red:'#c84040',grn:'#2a9060',wht:'#f0ead8',mut:'#7a90aa'};
+Chart.defaults.font.family="'IBM Plex Sans',sans-serif";
+Chart.defaults.color=C.mut;
+
+let cur=1; const built={};
+
+function goTo(n){
+  document.querySelector('#p'+cur).classList.remove('active');
+  document.querySelector('#p'+cur).style.display='none';
+  document.querySelectorAll('.nav-btn')[cur-1].classList.remove('active');
+  cur=n;
+  const pg=document.querySelector('#p'+cur);
+  pg.classList.add('active');
+  pg.style.display=cur===7?'flex':'block';
+  document.querySelectorAll('.nav-btn')[cur-1].classList.add('active');
+  document.getElementById('pgInd').textContent=cur+' / 7';
+  document.getElementById('prevBtn').disabled=cur===1;
+  document.getElementById('nextBtn').disabled=cur===7;
+  if(!built[n]){buildPage(n);built[n]=true;}
+}
+function prev(){if(cur>1)goTo(cur-1);}
+function next(){if(cur<7)goTo(cur+1);}
+
+const D={
+  penLabels:['Deposits','Remittance','FX','Loans','Trade Finance'],
+  penVals:[84.6,62.8,41.1,17.2,12.6],
+  penColors:[C.gold,C.teal,C.teal2,C.mut,'#5a6a7a'],
+  // Activity breakdown — corrected loan exposure 9.1→9.2
+  actLabels:['Generating gross profit','With loan exposure','With deposits','Active in remittance','With FX activity'],
+  actVals:[52.8,9.2,46.1,34.5,22.1],
+  actColors:[C.gold,C.teal2,C.teal,C.mut,'#4a5a6a'],
+  // Pareto — corrected all 3 figures
+  paretoItems:[
+    {label:'Top 100 customers',pct:26.8,note:'0.8% of active base · $467M'},
+    {label:'Top 500 customers',pct:57.7,note:'4.2% of active base · $1,004M'},
+    {label:'Top 1,197 customers (10%)',pct:77.8,note:'10% of active base · $1,355M'},
+  ],
+  mixLabels:['Loan','Liquid Deposit','FX','Term Deposit','Trade Finance'],
+  mixVals:[59.1,20.8,9.3,7.7,3.1],
+  mixColors:[C.gold,C.teal,C.teal2,C.n4,C.mut],
+  branchLabels:['S','B','M','T','V','N','Y'],
+  // Branch GP — corrected V ($115M→$100.3M) and N ($58M→$46.3M)
+  branchGP:[1066.3,260.1,150.3,118.5,100.3,46.3,12.4],
+  // Branch ROE — corrected S (13.1→13.3), B (15.9→16.0)
+  branchROE:[13.3,16.0,12.2,12.7,12.7,14.7,13.3],
+  prodDistVals:[2916,3716,3568,995,220],
+  prodDistLbls:['1 Product','2 Products','3 Products','4 Products','5 Products'],
+  avgGpVals:[220.7,81.0,127.3,235.9,253.1],
+  // Branch detail table — corrected GP, dormancy, ROE
+  branchDetail:[
+    {b:'S',gp:'$1,066M',share:'61%',cust:'3,803',total:'6,402',dorm:'40.6%',avgGP:'$280K',roe:'13.3%',prod:'1.8',assess:'Concentration Risk',ac:'at-red'},
+    {b:'B',gp:'$260M',  share:'15%',cust:'2,875',total:'3,629',dorm:'20.8%',avgGP:'$90K', roe:'16.0%',prod:'2.6',assess:'Best Unit Economics',ac:'at-grn'},
+    {b:'M',gp:'$150M',  share:'9%', cust:'1,339',total:'1,843',dorm:'27.3%',avgGP:'$114K',roe:'12.2%',prod:'2.3',assess:'Growth Focus',      ac:'at-gold'},
+    {b:'T',gp:'$119M',  share:'7%', cust:'1,112',total:'1,471',dorm:'24.4%',avgGP:'$107K',roe:'12.7%',prod:'1.7',assess:'Strong Returns',    ac:'at-grn'},
+    {b:'V',gp:'$100M',  share:'6%', cust:'1,729',total:'2,247',dorm:'23.1%',avgGP:'$67K', roe:'12.7%',prod:'2.3',assess:'Scale Opportunity', ac:'at-gold'},
+    {b:'N',gp:'$46M',   share:'3%', cust:'748',  total:'6,413',dorm:'88.3%',avgGP:'$77K', roe:'14.7%',prod:'2.4',assess:'Dormancy Opp.$175M',ac:'at-teal'},
+    {b:'Y',gp:'$12M',   share:'1%', cust:'366',  total:'557',  dorm:'34.3%',avgGP:'$34K', roe:'13.3%',prod:'2.4',assess:'Develop',           ac:'at-mut'},
+  ],
+  // ROE distribution — corrected counts
+  roeVals:[1037,321,136,83,316],
+};
+
+function barChart(id,labels,vals,colors,opts={}){
+  const ctx=document.getElementById(id); if(!ctx)return;
+  return new Chart(ctx,{type:'bar',data:{labels,datasets:[{data:vals,backgroundColor:colors,borderRadius:3,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:C.n2,borderColor:C.gold,borderWidth:1,titleColor:C.wht,bodyColor:C.mut,callbacks:opts.tt||{}}},scales:{x:{grid:{display:false},ticks:{color:C.mut,font:{size:10}}},y:{grid:{color:C.n3},ticks:{color:C.mut,font:{size:10},callback:opts.yFmt}}},...(opts.extra||{})}});
+}
+
+function hbars(id,labels,vals,colors){
+  const w=document.getElementById(id);
+  labels.forEach((lbl,i)=>{
+    w.innerHTML+=`<div class="hbar-row"><div class="hbar-meta"><span>${lbl}</span><strong>${vals[i]}%</strong></div><div class="hbar-track"><div class="hbar-fill" style="width:0%;background:${colors[i]};" data-w="${vals[i]}"></div></div></div>`;
+  });
+  setTimeout(()=>w.querySelectorAll('.hbar-fill').forEach(el=>el.style.width=el.dataset.w+'%'),80);
+}
+
+function buildPage(n){
+  if(n===1){
+    hbars('pen-bars',D.penLabels,D.penVals,D.penColors);
+    hbars('act-bars',D.actLabels,D.actVals,D.actColors);
+  }
+  if(n===2){
+    const pi=document.getElementById('pareto-items');
+    D.paretoItems.forEach(p=>{
+      pi.innerHTML+=`<div class="pareto-item"><div class="pareto-top"><span class="pareto-label">${p.label}</span><span class="pareto-val">${p.pct}%</span></div><div class="pareto-note">${p.note} · of total gross profit</div><div class="pareto-track"><div class="pareto-fill" style="width:0%" data-w="${p.pct}"></div></div></div>`;
+    });
+    setTimeout(()=>document.querySelectorAll('.pareto-fill').forEach(el=>el.style.width=el.dataset.w+'%'),80);
+    new Chart(document.getElementById('mixChart'),{type:'doughnut',data:{labels:D.mixLabels,datasets:[{data:D.mixVals,backgroundColor:D.mixColors,borderWidth:2,borderColor:C.n1}]},options:{responsive:false,cutout:'58%',plugins:{legend:{display:false},tooltip:{backgroundColor:C.n2,borderColor:C.gold,borderWidth:1,titleColor:C.wht,bodyColor:C.mut,callbacks:{label:ctx=>` ${ctx.label}: ${ctx.raw}%`}}}}});
+    const leg=document.getElementById('mixLegend');
+    D.mixLabels.forEach((l,i)=>{leg.innerHTML+=`<div class="dl-item"><div class="dl-dot" style="background:${D.mixColors[i]};"></div><span class="dl-label">${l}</span><span class="dl-val">${D.mixVals[i]}%</span></div>`;});
+    barChart('branchChart',D.branchLabels,D.branchGP,D.branchLabels.map(b=>b==='S'?C.gold:C.teal),{tt:{label:ctx=>` $${ctx.raw}M`}});
+  }
+  if(n===4){
+    barChart('prodDistChart',D.prodDistLbls,D.prodDistVals,['#1e3363','#162850','#2a8fa0','#c8a44a','#e8c46a'],{tt:{label:ctx=>` ${ctx.raw.toLocaleString()} customers`}});
+    barChart('avgGpChart',D.prodDistLbls,D.avgGpVals,['#1e3363','#162850','#2a8fa0','#c8a44a','#e8c46a'],{yFmt:v=>'$'+v+'K',tt:{label:ctx=>` Avg GP: $${ctx.raw}K`}});
+  }
+  if(n===5){
+    barChart('roeDistChart',['< 5%','5–10%','10–15%','15–20%','> 20%'],D.roeVals,['#c84040',C.mut,C.teal,C.teal2,C.gold],{tt:{label:ctx=>` ${ctx.raw.toLocaleString()} customers`}});
+    barChart('fxTrendChart',['FY22','FY23'],[940.2,892.0],[C.teal,C.mut],{tt:{label:ctx=>` $${ctx.raw}B FX volume`},extra:{scales:{x:{grid:{display:false},ticks:{color:C.mut,font:{size:11}}},y:{grid:{color:C.n3},ticks:{color:C.mut,font:{size:10},callback:v=>'$'+v+'B'},min:800}}}});
+  }
+  if(n===6){
+    const tbody=document.getElementById('branchTbody');
+    D.branchDetail.forEach(r=>{
+      tbody.innerHTML+=`<tr><td><b>${r.b}</b></td><td><b>${r.gp}</b></td><td><b style="color:${r.share==='61%'?C.gold:C.wht}">${r.share}</b></td><td>${r.cust}</td><td style="color:var(--mut)">${r.total}</td><td style="color:${r.dorm==='88.3%'?'#f87171':C.wht}">${r.dorm}</td><td>${r.avgGP}</td><td><b style="color:${parseFloat(r.roe)>15?'#4ade80':C.wht}">${r.roe}</b></td><td>${r.prod}</td><td><span class="at ${r.ac}">${r.assess}</span></td></tr>`;
+    });
+    barChart('branchBarDetail',D.branchLabels,D.branchGP,D.branchLabels.map(b=>b==='S'?C.gold:b==='N'?C.teal2:C.teal),{tt:{label:ctx=>` $${ctx.raw}M`}});
+    barChart('branchRoeChart',D.branchLabels,D.branchROE,D.branchROE.map((v,i)=>{if(D.branchLabels[i]==='B')return'#4ade80';if(D.branchLabels[i]==='N')return C.teal2;return C.teal;}),{yFmt:v=>v+'%',tt:{label:ctx=>` ${ctx.raw}% mean ROE (clean)`},extra:{scales:{y:{grid:{color:C.n3},ticks:{color:C.mut,font:{size:10},callback:v=>v+'%'},min:10,max:18},x:{grid:{display:false},ticks:{color:C.mut,font:{size:10}}}}}});
+  }
+}
+
+buildPage(1); built[1]=true;
+</script>
+</body>
+</html>
